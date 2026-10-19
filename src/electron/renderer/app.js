@@ -373,7 +373,7 @@ let viewSwitcherLongPressTimer = null;
 let viewSwitcherLongPressTriggered = false;
 let viewSwitcherHoverCloseTimer = null;
 const els = {
-  shell: document.querySelector('.shell'), status: document.getElementById('status'), liveDot: document.getElementById('liveDot'), tokenRateReveal: document.getElementById('tokenRateReveal'), liveTokenRate: document.getElementById('liveTokenRate'), liveTokenRateValue: document.getElementById('liveTokenRateValue'), totalTokens: document.getElementById('totalTokens'), totalTokensCompact: document.getElementById('totalTokensCompact'), cost: document.getElementById('cost'), homePanel: document.getElementById('homePanel'), breakdown: document.getElementById('breakdown'), sessionPagerHost: document.getElementById('sessionPagerHost'), serviceStatusPanel: document.getElementById('serviceStatusPanel'), limitsPanel: document.getElementById('limitsPanel'), trendsPanel: document.getElementById('trendsPanel'), viewSwitcher: document.getElementById('viewSwitcher'), pinButton: document.getElementById('pinButton'), utilityActions: document.getElementById('utilityActions'), settingsButton: document.getElementById('settingsButton'), settingsPanel: document.getElementById('settingsPanel'), languageInput: document.getElementById('languageInput'), currencyInput: document.getElementById('currencyInput'), currencyRateRow: document.getElementById('currencyRateRow'), currencyRateModeAuto: document.getElementById('currencyRateModeAuto'), currencyRateModeManual: document.getElementById('currencyRateModeManual'), currencyRateManualField: document.getElementById('currencyRateManualField'), currencyRateOverrideInput: document.getElementById('currencyRateOverrideInput'), currencyRateStatus: document.getElementById('currencyRateStatus'), hubUrlInput: document.getElementById('hubUrlInput'), secretInput: document.getElementById('secretInput'), deviceIdInput: document.getElementById('deviceIdInput'), limitProviderCheckboxes: document.getElementById('limitProviderCheckboxes'), limitsRefreshInput: document.getElementById('limitsRefreshInput'), limitsRefreshAdaptiveNote: document.getElementById('limitsRefreshAdaptiveNote'), showLimitSourceInput: document.getElementById('showLimitSourceInput'), maskLimitAccountEmailsInput: document.getElementById('maskLimitAccountEmailsInput'), showLimitUsedInputs: Array.from(document.querySelectorAll('input[name="showLimitUsed"]')), liveDotInput: document.getElementById('liveDotInput'), toolIconsInput: document.getElementById('toolIconsInput'), floatingBubbleInput: document.getElementById('floatingBubbleInput'), floatingBubbleTriggerInputs: Array.from(document.querySelectorAll('input[name="floatingBubbleTrigger"]')), floatingBubbleTriggerRow: document.getElementById('floatingBubbleTriggerRow'), floatingBubbleContentInput: document.getElementById('floatingBubbleContentInput'), floatingBubbleContentRow: document.getElementById('floatingBubbleContentRow'), floatingBubbleComposer: document.getElementById('floatingBubbleComposer'), floatingBubbleContent: document.getElementById('floatingBubbleContent'), discordRpcInput: document.getElementById('discordRpcInput'), windowBehaviorInput: document.getElementById('windowBehaviorInput'), keepAboveTaskbarInput: document.getElementById('keepAboveTaskbarInput'), keepAboveTaskbarRow: document.getElementById('keepAboveTaskbarRow'), showTrayIconInput: document.getElementById('showTrayIconInput'), showTrayProviderBadgeInput: document.getElementById('showTrayProviderBadgeInput'), hideAppIconInput: document.getElementById('hideAppIconInput'), hideAppIconRow: document.getElementById('hideAppIconRow'), hideAppIconOptions: document.getElementById('hideAppIconOptions'), trayModeInput: document.getElementById('trayModeInput'), trayContentInput: document.getElementById('trayContentInput'), trayComposer: document.getElementById('trayComposer'), windowToggleShortcutValue: document.getElementById('windowToggleShortcutValue'), windowToggleShortcutClearButton: document.getElementById('windowToggleShortcutClearButton'), windowToggleShortcutNote: document.getElementById('windowToggleShortcutNote'), glassInput: document.getElementById('glassInput'), blurInput: document.getElementById('blurInput'), zoomInput: document.getElementById('zoomInput'), resetGlassButton: document.getElementById('resetGlassButton'), resetDepthButton: document.getElementById('resetDepthButton'), resetZoomButton: document.getElementById('resetZoomButton'), saveSettingsButton: document.getElementById('saveSettingsButton'), clientDisplayList: document.getElementById('clientDisplayList'), wslScanInput: document.getElementById('wslScanInput'), wslScanRow: document.getElementById('wslScanRow'), wslPanel: document.getElementById('wslPanel'), openConfigButton: document.getElementById('openConfigButton'), exportAutoInput: document.getElementById('exportAutoInput'), exportAutoDetails: document.getElementById('exportAutoDetails'), exportAutoStatus: document.getElementById('exportAutoStatus'), exportDirLabel: document.getElementById('exportDirLabel'), exportPickDirButton: document.getElementById('exportPickDirButton'), exportIntervalInput: document.getElementById('exportIntervalInput'), exportNowButton: document.getElementById('exportNowButton'), refreshButton: document.getElementById('refreshButton'), minButton: document.getElementById('minButton'), closeButton: document.getElementById('closeButton'), floatingBubbleTab: document.getElementById('floatingBubbleTab'),
+  shell: document.querySelector('.shell'), status: document.getElementById('status'), liveDot: document.getElementById('liveDot'), tokenRateReveal: document.getElementById('tokenRateReveal'), liveTokenRate: document.getElementById('liveTokenRate'), liveTokenRateValue: document.getElementById('liveTokenRateValue'), totalTokens: document.getElementById('totalTokens'), totalTokensCompact: document.getElementById('totalTokensCompact'), cost: document.getElementById('cost'), homePanel: document.getElementById('homePanel'), breakdown: document.getElementById('breakdown'), sessionPagerHost: document.getElementById('sessionPagerHost'), serviceStatusPanel: document.getElementById('serviceStatusPanel'), limitsPanel: document.getElementById('limitsPanel'), trendsPanel: document.getElementById('trendsPanel'), viewSwitcher: document.getElementById('viewSwitcher'), pinButton: document.getElementById('pinButton'), utilityActions: document.getElementById('utilityActions'), settingsButton: document.getElementById('settingsButton'), settingsPanel: document.getElementById('settingsPanel'), languageInput: document.getElementById('languageInput'), currencyInput: document.getElementById('currencyInput'), currencyRateRow: document.getElementById('currencyRateRow'), currencyRateModeAuto: document.getElementById('currencyRateModeAuto'), currencyRateModeManual: document.getElementById('currencyRateModeManual'), currencyRateManualField: document.getElementById('currencyRateManualField'), currencyRateOverrideInput: document.getElementById('currencyRateOverrideInput'), currencyRateStatus: document.getElementById('currencyRateStatus'), hubUrlInput: document.getElementById('hubUrlInput'), secretInput: document.getElementById('secretInput'), deviceIdInput: document.getElementById('deviceIdInput'), limitProviderCheckboxes: document.getElementById('limitProviderCheckboxes'), limitsRefreshInput: document.getElementById('limitsRefreshInput'), limitsRefreshAdaptiveNote: document.getElementById('limitsRefreshAdaptiveNote'), showLimitSourceInput: document.getElementById('showLimitSourceInput'), maskLimitAccountEmailsInput: document.getElementById('maskLimitAccountEmailsInput'), showLimitUsedInputs: Array.from(document.querySelectorAll('input[name="showLimitUsed"]')), liveDotInput: document.getElementById('liveDotInput'), toolIconsInput: document.getElementById('toolIconsInput'), floatingBubbleInput: document.getElementById('floatingBubbleInput'), floatingBubbleTriggerInputs: Array.from(document.querySelectorAll('input[name="floatingBubbleTrigger"]')), floatingBubbleTriggerRow: document.getElementById('floatingBubbleTriggerRow'), floatingBubbleContentInput: document.getElementById('floatingBubbleContentInput'), floatingBubbleContentRow: document.getElementById('floatingBubbleContentRow'), floatingBubbleComposer: document.getElementById('floatingBubbleComposer'), floatingBubbleContent: document.getElementById('floatingBubbleContent'), discordRpcInput: document.getElementById('discordRpcInput'), windowBehaviorInput: document.getElementById('windowBehaviorInput'), topDockInput: document.getElementById('topDockInput'), keepAboveTaskbarInput: document.getElementById('keepAboveTaskbarInput'), keepAboveTaskbarRow: document.getElementById('keepAboveTaskbarRow'), showTrayIconInput: document.getElementById('showTrayIconInput'), showTrayProviderBadgeInput: document.getElementById('showTrayProviderBadgeInput'), hideAppIconInput: document.getElementById('hideAppIconInput'), hideAppIconRow: document.getElementById('hideAppIconRow'), hideAppIconOptions: document.getElementById('hideAppIconOptions'), trayModeInput: document.getElementById('trayModeInput'), trayContentInput: document.getElementById('trayContentInput'), trayComposer: document.getElementById('trayComposer'), windowToggleShortcutValue: document.getElementById('windowToggleShortcutValue'), windowToggleShortcutClearButton: document.getElementById('windowToggleShortcutClearButton'), windowToggleShortcutNote: document.getElementById('windowToggleShortcutNote'), glassInput: document.getElementById('glassInput'), blurInput: document.getElementById('blurInput'), zoomInput: document.getElementById('zoomInput'), resetGlassButton: document.getElementById('resetGlassButton'), resetDepthButton: document.getElementById('resetDepthButton'), resetZoomButton: document.getElementById('resetZoomButton'), saveSettingsButton: document.getElementById('saveSettingsButton'), clientDisplayList: document.getElementById('clientDisplayList'), wslScanInput: document.getElementById('wslScanInput'), wslScanRow: document.getElementById('wslScanRow'), wslPanel: document.getElementById('wslPanel'), openConfigButton: document.getElementById('openConfigButton'), exportAutoInput: document.getElementById('exportAutoInput'), exportAutoDetails: document.getElementById('exportAutoDetails'), exportAutoStatus: document.getElementById('exportAutoStatus'), exportDirLabel: document.getElementById('exportDirLabel'), exportPickDirButton: document.getElementById('exportPickDirButton'), exportIntervalInput: document.getElementById('exportIntervalInput'), exportNowButton: document.getElementById('exportNowButton'), refreshButton: document.getElementById('refreshButton'), minButton: document.getElementById('minButton'), closeButton: document.getElementById('closeButton'), floatingBubbleTab: document.getElementById('floatingBubbleTab'),
   subscriptionList: document.getElementById('subscriptionList'), subscriptionAddForm: document.getElementById('subscriptionAddForm'), subscriptionAddToggle: document.getElementById('subscriptionAddToggle'), subscriptionAddDetails: document.getElementById('subscriptionAddDetails'), subscriptionProviderInput: document.getElementById('subscriptionProviderInput'), subscriptionAccountInput: document.getElementById('subscriptionAccountInput'), subscriptionPlanNameInput: document.getElementById('subscriptionPlanNameInput'), subscriptionAmountInput: document.getElementById('subscriptionAmountInput'), subscriptionCurrencyInput: document.getElementById('subscriptionCurrencyInput'), subscriptionIntervalCountInput: document.getElementById('subscriptionIntervalCountInput'), subscriptionIntervalInput: document.getElementById('subscriptionIntervalInput'), subscriptionStartDateInput: document.getElementById('subscriptionStartDateInput'), subscriptionAutoRenewInput: document.getElementById('subscriptionAutoRenewInput'), subscriptionNextRenewalInput: document.getElementById('subscriptionNextRenewalInput'), subscriptionNote: document.getElementById('subscriptionNote'), subscriptionOrphanNotice: document.getElementById('subscriptionOrphanNotice'), subscriptionOrphanText: document.getElementById('subscriptionOrphanText'), subscriptionOrphanAdopt: document.getElementById('subscriptionOrphanAdopt'), subscriptionOrphanDiscard: document.getElementById('subscriptionOrphanDiscard'), subscriptionSyncError: document.getElementById('subscriptionSyncError'), subscriptionNextRenewalLabel: document.getElementById('subscriptionNextRenewalLabel'), subscriptionNextRenewalNote: document.getElementById('subscriptionNextRenewalNote'), subscriptionSubmit: document.getElementById('subscriptionSubmit'), subscriptionCancelEdit: document.getElementById('subscriptionCancelEdit'), subscriptionTotalRow: document.getElementById('subscriptionTotalRow'), subscriptionErrorMessage: document.getElementById('subscriptionErrorMessage'), subscriptionPlanFields: document.getElementById('subscriptionPlanFields'), subscriptionTopUpFields: document.getElementById('subscriptionTopUpFields'), subscriptionTopUpList: document.getElementById('subscriptionTopUpList'), subscriptionTopUpDateInput: document.getElementById('subscriptionTopUpDateInput'), subscriptionTopUpAmountInput: document.getElementById('subscriptionTopUpAmountInput'), subscriptionTopUpAddButton: document.getElementById('subscriptionTopUpAddButton'), subscriptionAmountRow: document.getElementById('subscriptionAmountRow'), subscriptionTopUpHeadingRow: document.getElementById('subscriptionTopUpHeadingRow'), subscriptionKindInputs: [...document.querySelectorAll('input[name="subscriptionKind"]')]
 };
 Object.assign(els, {
@@ -7173,9 +7173,349 @@ function setRendererSettings(next) {
     allTimeSessions.ensure();
   }
   if (titlesChanged) refreshSessionDetailHeading();
+  renderTopDock();
+}
+
+let topDockBound = false;
+let topDockExpanded = false;
+let topDockTicker = null;
+let topDockRenderSignature = '';
+
+function topDockElements() {
+  return {
+    root: document.getElementById('topDock'),
+    strip: document.getElementById('topDockStrip'),
+    grid: document.getElementById('topDockGrid'),
+    empty: document.getElementById('topDockEmpty'),
+    size: document.getElementById('topDockSizeButton'),
+    close: document.getElementById('topDockCloseButton')
+  };
+}
+
+function topDockElement(tag, className, text = '') {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text) node.textContent = text;
+  return node;
+}
+
+function topDockProviderLabel(row) {
+  if (row.provider === 'thirdparty' && row.accountName) return row.accountName;
+  return LIMIT_PROVIDERS.find((provider) => provider.id === row.provider)?.label || row.provider;
+}
+
+function topDockChipLabel(row) {
+  const label = topDockProviderLabel(row);
+  return label === 'WorkBuddy2API' ? 'WB2' : label;
+}
+
+function appendTopDockConsoleLink(card, row) {
+  const url = window.TokenMonitorTopDockModel?.topDockConsoleUrl(
+    row,
+    state.settings?.thirdPartyProfiles || {}
+  );
+  if (!url) return;
+  const button = topDockElement('button', 'top-dock-card-link');
+  button.type = 'button';
+  button.title = `打开 ${topDockProviderLabel(row)} 控制台`;
+  button.setAttribute('aria-label', button.title);
+  const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  icon.setAttribute('viewBox', '0 0 24 24');
+  icon.setAttribute('aria-hidden', 'true');
+  for (const d of ['M14 3h7v7', 'M10 14 21 3', 'M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5']) {
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+    icon.append(path);
+  }
+  button.append(icon, topDockElement('span', '', '控制台'));
+  button.addEventListener('click', (event) => {
+    event.stopPropagation();
+    void window.tokenMonitor?.openExternal?.(url);
+  });
+  card.append(button);
+}
+
+function topDockValue(row) {
+  if (row.balanceNote) return '--';
+  if (row.percent !== null) return `${Math.round(row.percent)}%`;
+  if (row.usedTokens !== null) {
+    return formatCompact(
+      row.usedTokens,
+      state.settings?.compactTokenUnits,
+      currentLocale()
+    );
+  }
+  if (row.balance !== null) {
+    return formatCompactMoney(
+      row.balance,
+      row.currency || 'USD',
+      state.settings?.compactTokenUnits,
+      currentLocale()
+    );
+  }
+  return row.unlimited ? '无限' : '--';
+}
+
+function topDockRingText(row) {
+  if (row.percent !== null) return `${Math.round(row.percent)}%`;
+  if (row.usedTokens !== null) return '用';
+  if (row.balance !== null) return row.currency === 'CNY' ? '¥' : '$';
+  return row.unlimited ? '∞' : '--';
+}
+
+function createTopDockChip(row, index) {
+  const chip = topDockElement('div', `top-dock-chip tone-${row.tone}`);
+  chip.style.setProperty('--i', String(index));
+  chip.style.setProperty('--pct', String(row.percent ?? (row.balance !== null ? 100 : 0)));
+
+  const ring = topDockElement('span', 'top-dock-ring');
+  ring.append(topDockElement('span', 'top-dock-ring-core', topDockRingText(row)));
+
+  const copy = topDockElement('span', 'top-dock-chip-copy');
+  copy.append(topDockElement('span', 'top-dock-chip-name', topDockChipLabel(row)));
+  if (row.usedTokens !== null) {
+    chip.classList.add('top-dock-chip-usage');
+    copy.append(topDockElement('span', 'top-dock-chip-meta', `${topDockValue(row)} 已用`));
+    chip.title = `${topDockProviderLabel(row)} · ${row.windowLabel || '已用'} ${row.usedTokens} Token`;
+    chip.append(ring, copy);
+    return chip;
+  }
+  if (row.balance !== null || row.balanceNote) {
+    chip.classList.add('top-dock-chip-balance');
+    copy.append(topDockElement('span', 'top-dock-chip-meta', row.balanceNote || topDockValue(row)));
+    chip.title = `${topDockProviderLabel(row)} · ${row.balanceNote || `${row.currency} ${row.balance}`}`;
+    chip.append(ring, copy);
+    return chip;
+  }
+  const codexWindows = row.codexWindows || [];
+  const quotaText = codexWindows.length
+    ? codexWindows.map((quota) => `${quota.kind === 'session' ? '5h' : '周'} ${quota.percent === null ? '--' : `${Math.round(quota.percent)}%`}`).join(' · ')
+    : row.balanceNote || row.windowLabel || '额度';
+  copy.append(topDockElement('span', 'top-dock-chip-meta', quotaText));
+  if (codexWindows.length) {
+    chip.classList.add('top-dock-chip-dual');
+    chip.append(ring, copy);
+    return chip;
+  }
+
+  const timeText = row.resetAt !== null
+    ? row.countdown
+    : row.usedTokens !== null
+      ? '今日'
+      : row.balance !== null
+        ? '余额'
+        : row.balanceNote ? '--' : '∞';
+  const time = topDockElement('span', 'top-dock-chip-time', timeText);
+  if (row.resetAt !== null) time.dataset.resetAt = String(row.resetAt);
+  chip.append(ring, copy, time);
+  return chip;
+}
+
+function createTopDockCard(row, index) {
+  const card = topDockElement('article', `top-dock-card tone-${row.tone}`);
+  card.style.setProperty('--i', String(index));
+  card.style.setProperty('--pct', String(row.percent ?? (row.balance !== null ? 100 : 0)));
+
+  const copy = topDockElement('div', 'top-dock-card-copy');
+  const title = topDockElement('div', 'top-dock-card-name', topDockProviderLabel(row));
+  if (row.accountName) title.title = `${title.textContent} · ${row.accountName}`;
+  if (row.codexWindows?.length) {
+    card.classList.add('top-dock-card-dual');
+    card.append(title);
+    for (const quota of row.codexWindows) {
+      const lane = topDockElement('div', `top-dock-quota tone-${quota.tone}`);
+      lane.dataset.quotaKind = quota.kind;
+      lane.style.setProperty('--pct', String(quota.percent ?? 0));
+      const heading = topDockElement('div', 'top-dock-quota-heading');
+      heading.append(
+        topDockElement('span', '', quota.label),
+        topDockElement('strong', '', quota.percent === null ? '--' : `${Math.round(quota.percent)}% 剩余`)
+      );
+      const track = topDockElement('div', 'top-dock-card-track');
+      track.append(topDockElement('div', 'top-dock-card-fill'));
+      const reset = topDockElement('div', 'top-dock-quota-reset');
+      const countdown = topDockElement('span', '', quota.countdown);
+      if (quota.resetAt !== null) countdown.dataset.resetAt = String(quota.resetAt);
+      reset.append(countdown, topDockElement('span', '', quota.resetAt === null ? '重置时间未知' : '后重置'));
+      lane.append(heading, track, reset);
+      card.append(lane);
+    }
+    appendTopDockConsoleLink(card, row);
+    return card;
+  }
+  const value = topDockElement('div', 'top-dock-card-value');
+  value.append(document.createTextNode(topDockValue(row)));
+  if (row.percent !== null) {
+    const unit = topDockElement('small', '', '剩余');
+    value.append(unit);
+  } else if (row.usedTokens !== null) {
+    value.append(topDockElement('small', '', '今日'));
+  }
+  const meta = topDockElement(
+    'div',
+    'top-dock-card-meta',
+    row.balanceNote || (row.percent !== null
+      ? `${row.windowLabel || '额度'} · 自动刷新`
+      : row.usedTokens !== null
+        ? `${row.windowLabel || '今日已用'} · 自动刷新`
+      : row.unlimited
+        ? '额度无限 · 自动刷新'
+        : '账户余额 · 自动刷新')
+  );
+  copy.append(title, value, meta);
+  if (row.percent !== null) {
+    const track = topDockElement('div', 'top-dock-card-track');
+    track.append(topDockElement('div', 'top-dock-card-fill'));
+    copy.append(track);
+  }
+
+  const clock = topDockElement('div', 'top-dock-card-clock');
+  const clockRing = topDockElement('div', 'top-dock-clock-ring');
+  const clockCore = topDockElement('div', 'top-dock-clock-core');
+  if (row.resetAt !== null) {
+    const countdown = topDockElement('span', '', row.countdown);
+    countdown.dataset.resetAt = String(row.resetAt);
+    clockCore.append(countdown, topDockElement('span', '', '重置'));
+  } else {
+    clockCore.append(topDockElement(
+      'span',
+      '',
+      row.balanceNote ? '--' : row.usedTokens !== null ? '今日' : row.balance !== null ? '余额' : '无限'
+    ));
+  }
+  clockRing.append(clockCore);
+  clock.append(clockRing);
+
+  card.append(copy, clock);
+  appendTopDockConsoleLink(card, row);
+  return card;
+}
+
+function updateTopDockCountdowns() {
+  const model = window.TokenMonitorTopDockModel;
+  if (!model) return;
+  const now = Date.now();
+  for (const node of document.querySelectorAll('#topDock [data-reset-at]')) {
+    const resetAt = Number(node.dataset.resetAt);
+    node.textContent = Number.isFinite(resetAt) ? model.formatCountdown(resetAt - now) : '--';
+  }
+}
+
+function startTopDockTicker() {
+  if (topDockTicker) return;
+  topDockTicker = setInterval(updateTopDockCountdowns, 1000);
+}
+
+function setTopDockExpanded(nextExpanded) {
+  const { root } = topDockElements();
+  if (!root) return;
+  topDockExpanded = nextExpanded === true;
+  root.classList.toggle('expanded', topDockExpanded);
+  void window.tokenMonitor?.topDock?.setExpanded(topDockExpanded);
+  if (topDockExpanded) updateTopDockCountdowns();
+}
+
+function bindTopDockInteractions() {
+  if (topDockBound) return;
+  const { root, strip, size, close } = topDockElements();
+  if (!root) return;
+  const surface = root.querySelector('.top-dock-surface');
+  if (!surface) return;
+  topDockBound = true;
+  surface.addEventListener('mouseenter', () => setTopDockExpanded(true));
+  surface.addEventListener('mouseleave', () => setTopDockExpanded(false));
+  window.addEventListener('blur', () => setTopDockExpanded(false));
+  strip?.addEventListener('wheel', (event) => {
+    if (strip.scrollWidth <= strip.clientWidth) return;
+    const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+    strip.scrollLeft += delta;
+    event.preventDefault();
+  }, { passive: false });
+  size?.addEventListener('click', async (event) => {
+    event.stopPropagation();
+    size.disabled = true;
+    try {
+      state.settings = await window.tokenMonitor.updateSettings({
+        topDockCompact: state.settings?.topDockCompact !== true
+      });
+      renderTopDock();
+    } catch (error) {
+      console.error('[top-dock] size change failed', error);
+      size.title = '调整失败 点击重试';
+      size.setAttribute('aria-label', size.title);
+    } finally {
+      size.disabled = false;
+    }
+  });
+  close?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    window.tokenMonitor?.topDock?.close();
+  });
+  startTopDockTicker();
+}
+
+function renderTopDock() {
+  const model = window.TokenMonitorTopDockModel;
+  const { root, strip, grid, empty, size } = topDockElements();
+  if (!model || !root || !strip || !grid || !empty) return;
+  const settings = model.normalizeTopDockSettings(state.settings || {});
+  const enabled = settings.topDockEnabled;
+  root.classList.toggle('hidden', !enabled);
+  document.body.classList.toggle('top-dock-mode', enabled);
+  if (!enabled) {
+    void window.tokenMonitor?.topDock?.setExpanded(false);
+    return;
+  }
+  bindTopDockInteractions();
+  if (size) {
+    size.classList.toggle('active', settings.topDockCompact);
+    size.title = settings.topDockCompact ? '恢复正常大小' : '缩小至 80%';
+    size.setAttribute('aria-label', size.title);
+    size.setAttribute('aria-pressed', String(settings.topDockCompact));
+  }
+
+  const enabledProviders = enabledLimitProviderSet();
+  const topDockProviders = new Set(['codex', 'deepseek', 'thirdparty']);
+  const providers = (state.stats?.limits?.providers || [])
+    .filter((provider) => enabledProviders.has(provider.provider))
+    .filter((provider) => topDockProviders.has(provider.provider));
+  for (const accountName of settings.topDockRelayAccounts || []) {
+    if (!providers.some((provider) => provider.provider === 'thirdparty' && provider.accountName === accountName)) {
+      providers.push({ provider: 'thirdparty', accountName, status: 'notConfigured', windows: [] });
+    }
+  }
+  const providersWithUsageFallback = model.topDockProvidersWithUsageFallback(
+    providers,
+    state.stats?.periods?.today?.clients || {}
+  );
+  const rows = model.topDockProviderRows(providersWithUsageFallback, {
+    limit: 12, accountNames: settings.topDockRelayAccounts, balanceOnly: true
+  });
+  const signature = JSON.stringify(rows.map((row) => [
+    row.provider,
+    row.accountKey,
+    row.percent,
+    row.balance,
+    row.usedTokens,
+    row.balanceNote,
+    row.currency,
+    row.resetAt,
+    row.tone,
+    row.windowLabel,
+    row.codexWindows?.map((quota) => [quota.kind, quota.percent, quota.resetAt])
+  ]));
+  if (signature !== topDockRenderSignature) {
+    topDockRenderSignature = signature;
+    strip.replaceChildren(...rows.map(createTopDockChip));
+    grid.replaceChildren(...rows.map(createTopDockCard));
+    empty.classList.toggle('hidden', rows.length > 0);
+    grid.classList.toggle('hidden', rows.length === 0);
+  }
+  updateTopDockCountdowns();
 }
 
 function render() {
+  renderTopDock();
   const surface = visibleStatsSurface();
   if (surface !== 'main') {
     if (!surface) statsRenderScheduler.request();
@@ -8089,6 +8429,7 @@ function syncWindowBehaviorControls() {
   const mode = currentWindowBehavior();
   const next = nextWindowBehavior(mode);
   els.windowBehaviorInput.value = mode;
+  if (els.topDockInput) els.topDockInput.checked = state.settings?.topDockEnabled !== false;
   els.pinButton.textContent = WINDOW_BEHAVIOR_ICONS[mode] || WINDOW_BEHAVIOR_ICONS.normal;
   els.pinButton.classList.toggle('active', mode !== 'normal');
   const title = t('settings.windowBehavior.buttonTitle', {
@@ -13255,6 +13596,7 @@ els.swapSettingsRefreshInput.addEventListener('change', () => {
 });
 els.discordRpcInput.addEventListener('change', saveAppearanceFromControls);
 els.windowBehaviorInput.addEventListener('change', () => saveSettings({ windowBehavior: els.windowBehaviorInput.value }));
+els.topDockInput?.addEventListener('change', () => saveSettings({ topDockEnabled: els.topDockInput.checked }));
 els.keepAboveTaskbarInput?.addEventListener('change', () => saveSettings({ keepAboveTaskbar: els.keepAboveTaskbarInput.checked }));
 els.floatingBubbleInput.addEventListener('change', () => {
   state.settings.floatingBubbleEnabled = els.floatingBubbleInput.checked;

@@ -37,6 +37,8 @@ const {
   isSupportedWorkbuddyLocalAppPlatform
 } = require('./providers/workbuddy/localAuth');
 const { createElectronLimitsFetch } = require('./limits/fetch');
+const { buildImportPlan, readCcSwitchRows } = require('./ccSwitchImport');
+const topDockModel = require('./renderer/topDock/topDockModel');
 const {
   expandedBoundsForCollapse,
   normalWindowBounds,
@@ -471,7 +473,7 @@ const { isLightHex } = require('./renderer/themePresets');
 
 if (!app.isPackaged) loadDotEnv();
 
-const APP_NAME = 'Token Monitor';
+const APP_NAME = 'Token Monitor TopDock';
 const APP_ICON_PATH = path.join(__dirname, '..', '..', 'assets', 'icon.png');
 const WINDOWS_APP_ICON_PATH = path.join(__dirname, '..', '..', 'assets', 'icon-win.png');
 
@@ -548,7 +550,7 @@ const diagnosticJournal = createDiagnosticJournal();
 const recoverMacWidgetLaunchServicesRegistration = createMacWidgetLaunchServicesRecovery();
 
 app.setName(APP_NAME);
-if (process.platform === 'win32') app.setAppUserModelId('com.javis.tokenmonitor');
+if (process.platform === 'win32') app.setAppUserModelId('com.javis.tokenmonitor.topdock');
 
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) app.exit(0);
@@ -660,6 +662,15 @@ function defaultSettings() {
     edgeDockOffset: null,
     edgeDockDisplayId: null,
     edgeDockItems: null,
+    topDockEnabled: true,
+    topDockCompact: false,
+    topDockRelayAccounts: null,
+    topDockPinned: false,
+    topDockAutoHideMs: 1200,
+    topDockWidth: 680,
+    topDockCollapsedHeight: 44,
+    topDockExpandedHeight: 220,
+    ccSwitchImportVersion: 0,
     lastViewState: { period: 'today', breakdown: 'home' },
     discordRpcEnabled: false,
     deviceId: process.env.TOKEN_MONITOR_DEVICE_ID || defaultDeviceId(),
@@ -2213,6 +2224,76 @@ function ensureSettingsLoaded() {
   return settings;
 }
 
+function antigravityInstalledOnThisMachine() {
+  const roots = [
+    path.join(os.homedir(), '.gemini', 'antigravity'),
+    path.join(os.homedir(), '.gemini', 'antigravity-ide'),
+    path.join(process.env.LOCALAPPDATA || '', 'antigravity'),
+    path.join(process.env.APPDATA || '', 'Antigravity')
+  ];
+  return roots.some((candidate) => candidate && fs.existsSync(candidate));
+}
+
+function importCcSwitchCredentialsOnce() {
+  if (settings?.ccSwitchImportVersion >= 2) return;
+  const dbPath = process.env.CC_SWITCH_DB
+    || path.join(os.homedir(), '.cc-switch', 'cc-switch.db');
+  if (!fs.existsSync(dbPath)) return;
+  const rows = readCcSwitchRows(dbPath);
+  const plan = buildImportPlan({
+    rows,
+    existingProfiles: settings.thirdPartyProfiles || {},
+    existingDeepSeekApiKey: settings.deepseekApiKey || ''
+  });
+  settings.thirdPartyProfiles = plan.profiles;
+  if (plan.deepseekApiKey) settings.deepseekApiKey = plan.deepseekApiKey;
+  const enabled = new Set(parseLimitProviders(settings.limitProviders));
+  if (Object.keys(plan.profiles).length > 0) enabled.add('thirdparty');
+  if (plan.deepseekApiKey || settings.deepseekApiKey) enabled.add('deepseek');
+  if (antigravityInstalledOnThisMachine()) enabled.add('antigravity');
+  settings.limitProviders = [...enabled].join(',');
+  if (plan.imported.length > 0) initialLimitProvidersPending = false;
+  settings.ccSwitchImportVersion = 2;
+  if (!saveSettings()) {
+    console.warn('[cc-switch] imported credentials could not be persisted yet');
+  }
+}
+
+let topDockWindowExpanded = false;
+
+function topDockWindowBounds(expanded) {
+  const normalized = topDockModel.normalizeTopDockSettings(settings || {});
+  return topDockModel.topDockBounds({
+    workArea: screen.getPrimaryDisplay().workArea,
+    width: normalized.topDockWidth,
+    collapsedHeight: normalized.topDockCollapsedHeight,
+    expandedHeight: normalized.topDockExpandedHeight,
+    scale: normalized.topDockCompact ? 0.8 : 1,
+    expanded
+  });
+}
+
+function setTopDockExpanded(expanded) {
+  if (!mainWindow || mainWindow.isDestroyed() || settings?.topDockEnabled !== true) return null;
+  topDockWindowExpanded = expanded === true;
+  const bounds = topDockWindowBounds(topDockWindowExpanded);
+  if (bounds) mainWindow.setBounds(bounds);
+  return bounds;
+}
+
+function applyTopDockSizing() {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  const collapsed = topDockWindowBounds(false);
+  const expanded = topDockWindowBounds(true);
+  // Release the old fixed width before switching size in either direction.
+  mainWindow.setMinimumSize(1, 1);
+  mainWindow.setMaximumSize(0, 0);
+  applyZoomFactor();
+  setTopDockExpanded(topDockWindowExpanded);
+  mainWindow.setMinimumSize(collapsed.width, collapsed.height);
+  mainWindow.setMaximumSize(expanded.width, expanded.height);
+}
+
 function updateRendererViewState(patch) {
   const previous = rendererViewState;
   rendererViewState = normalizeInitialRendererViewState({
@@ -2404,6 +2485,16 @@ function scheduleFloatingBubbleAutoCollapse() {
 }
 
 function syncFloatingBubbleAvailability() {
+  if (settings?.topDockEnabled === true) {
+    stopFloatingBubbleAutoCollapseTimer();
+    Object.assign(floatingBubbleState, {
+      collapsed: false, side: null, collapsedBounds: null,
+      expandedBounds: null, suppressNextCollapse: false
+    });
+    applyTopDockSizing();
+    sendFloatingBubbleState();
+    return;
+  }
   if (!canUseFloatingBubble(settings)) {
     if (floatingBubbleState.collapsed) expandFloatingBubble({ focus: false });
     else {
@@ -2461,7 +2552,10 @@ function persistBoundsSoon() {
 
 function applyZoomFactor(target = mainWindow) {
   if (!target || target.isDestroyed()) return;
-  target.webContents.setZoomFactor(clampZoom(settings.zoomFactor));
+  const zoom = target === mainWindow && settings?.topDockEnabled === true
+    ? (settings.topDockCompact ? 0.8 : 1)
+    : clampZoom(settings.zoomFactor);
+  target.webContents.setZoomFactor(zoom);
 }
 
 function setZoomFactor(value) {
@@ -2771,6 +2865,9 @@ function readSettings() {
     merged.edgeDockSize = normalizeEdgeDockSize(merged.edgeDockSize);
     merged.edgeDockCustomScale = normalizeEdgeDockCustomScale(merged.edgeDockCustomScale);
     merged.edgeDockItems = normalizeEdgeDockItems(merged.edgeDockItems);
+    const topDock = topDockModel.normalizeTopDockSettings(merged);
+    Object.assign(merged, topDock);
+    merged.ccSwitchImportVersion = Math.max(0, Math.trunc(Number(merged.ccSwitchImportVersion) || 0));
     merged.trayCustomLayout = normalizeTrayLayout(merged.trayCustomLayout);
     merged.showTrayProviderBadge = parseBoolean(merged.showTrayProviderBadge, false);
     merged.windowToggleShortcut = normalizeWindowToggleShortcut(merged.windowToggleShortcut);
@@ -2997,7 +3094,7 @@ function stopTaskbarZOrderKeeper() {
 }
 
 function syncTaskbarZOrder() {
-  if (!taskbarZOrderEnabled(settings)) {
+  if (settings?.topDockEnabled === true || !taskbarZOrderEnabled(settings)) {
     stopTaskbarZOrderKeeper();
     return;
   }
@@ -3016,12 +3113,22 @@ function syncTaskbarZOrder() {
 // Losing activation to the taskbar is the one transition Windows raises it on
 // that reaches us as an event, so it gets the fast path.
 function nudgeTaskbarZOrder() {
-  if (!taskbarZOrderEnabled(settings) || !taskbarZOrderKeeper) return;
+  if (settings?.topDockEnabled === true || !taskbarZOrderEnabled(settings) || !taskbarZOrderKeeper) return;
   taskbarZOrderKeeper.nudge(mainWindow);
 }
 
 function applyWindowSettings() {
   if (!mainWindow) return;
+  if (settings?.topDockEnabled === true) {
+    mainWindow.setAlwaysOnTop(false, floatingAlwaysOnTopLevel());
+    if (typeof mainWindow.setMovable === 'function') mainWindow.setMovable(false);
+    if (typeof mainWindow.setResizable === 'function') mainWindow.setResizable(false);
+    if (typeof mainWindow.setIgnoreMouseEvents === 'function') mainWindow.setIgnoreMouseEvents(false);
+    if (typeof mainWindow.setFocusable === 'function') mainWindow.setFocusable(true);
+    if (typeof mainWindow.setSkipTaskbar === 'function') mainWindow.setSkipTaskbar(true);
+    syncTaskbarZOrder();
+    return;
+  }
   if (floatingBubbleState.collapsed) {
     applyCollapsedFloatingBubbleLimits(mainWindow.getBounds());
     return;
@@ -3040,7 +3147,7 @@ function applyWindowSettings() {
 }
 
 function nativeBlurEnabled(source = settings) {
-  return floatingBubbleNativeGlassEnabled(source);
+  return source?.topDockEnabled !== true && floatingBubbleNativeGlassEnabled(source);
 }
 
 function nativeMaterialOptions(source = settings, dashboard = false) {
@@ -7284,10 +7391,41 @@ async function installDownloadedAppUpdate() {
 // Limits page's row, and that row is a link to its source.
 const CODEX_RESET_FORECAST_SOURCE_URL = 'https://codex-resets.com/';
 
+function configuredThirdPartyConsoleHosts() {
+  const hosts = new Set();
+  for (const profile of Object.values(settings?.thirdPartyProfiles || {})) {
+    try {
+      const parsed = new URL(String(profile?.baseUrl || ''));
+      if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+        hosts.add(parsed.hostname.toLowerCase());
+      }
+    } catch (_) {}
+  }
+  return hosts;
+}
+
 function isAllowedExternalUrl(value) {
   let parsed;
   try { parsed = new URL(String(value || '')); }
   catch (_) { return false; }
+  const host = parsed.hostname.toLowerCase();
+  if (
+    parsed.protocol === 'https:'
+    && host === 'chatgpt.com'
+    && (parsed.pathname.startsWith('/codex') || parsed.pathname.startsWith('/settings'))
+  ) return true;
+  if (
+    parsed.protocol === 'https:'
+    && host === 'platform.deepseek.com'
+    && (parsed.pathname.startsWith('/usage') || parsed.pathname.startsWith('/api_keys'))
+  ) return true;
+  const thirdPartyHosts = configuredThirdPartyConsoleHosts();
+  if (parsed.protocol === 'https:' && thirdPartyHosts.has(host)) return true;
+  if (
+    parsed.protocol === 'http:'
+    && ['localhost', '127.0.0.1'].includes(host)
+    && thirdPartyHosts.has(host)
+  ) return true;
   if (parsed.protocol !== 'https:') return false;
   const enterpriseHost = settings?.copilotEnterpriseHost || process.env.COPILOT_ENTERPRISE_HOST || process.env.GITHUB_ENTERPRISE_HOST || '';
   if (isAllowedVerificationUrl(value, enterpriseHost)) return true;
@@ -7363,28 +7501,41 @@ function loadWindowFile(target, options = {}) {
 function createWindow(boundsOverride, options = {}) {
   ensureSettingsLoaded();
   const collapsedFloatingBubble = options.collapsedFloatingBubble === true;
+  const topDockEnabled = settings?.topDockEnabled === true;
+  if (topDockEnabled) topDockWindowExpanded = false;
   const glass = nativeBlurEnabled();
   const windowsBackdrop = normalizeWindowsBackdropMode(settings?.windowsBackdrop);
   const windowsAccent = process.platform === 'win32' && glass && windowsBackdrop === WINDOWS_BACKDROP_ACCENT;
-  const bounds = boundsOverride || restoredBounds() || DEFAULT_WINDOW;
+  const bounds = topDockEnabled
+    ? topDockWindowBounds(false)
+    : (boundsOverride || restoredBounds() || DEFAULT_WINDOW);
   const collapsedSizeLimits = {
     minWidth: bounds.width,
     minHeight: bounds.height,
     maxWidth: bounds.width,
     maxHeight: bounds.height
   };
+  const topDockLimits = topDockEnabled
+    ? {
+        minWidth: bounds.width,
+        maxWidth: bounds.width,
+        minHeight: bounds.height,
+        maxHeight: topDockWindowBounds(true).height
+      }
+    : null;
   const win = new BrowserWindow({
     width: bounds.width,
     height: bounds.height,
     ...(typeof bounds.x === 'number' ? { x: bounds.x, y: bounds.y } : {}),
-    ...(collapsedFloatingBubble ? collapsedSizeLimits : WINDOW_LIMITS),
+    ...(topDockLimits || (collapsedFloatingBubble ? collapsedSizeLimits : WINDOW_LIMITS)),
     frame: false,
-    transparent: !(process.platform === 'win32' && glass),
-    resizable: !collapsedFloatingBubble,
+    transparent: topDockEnabled || !(process.platform === 'win32' && glass),
+    resizable: !topDockEnabled && !collapsedFloatingBubble,
     show: false,
     backgroundColor: '#00000000',
     ...appWindowIcon(),
-    skipTaskbar: collapsedFloatingBubble || skipTaskbarForSettings(settings),
+    skipTaskbar: topDockEnabled || collapsedFloatingBubble || skipTaskbarForSettings(settings),
+    ...(topDockEnabled ? { alwaysOnTop: false, fullscreenable: false, maximizable: false, minimizable: false, hasShadow: false, roundedCorners: false } : {}),
     ...(collapsedFloatingBubble ? { fullscreenable: false, maximizable: false, minimizable: false } : {}),
     // Keeps a popover unmaximizable across rebuilds, which never re-run enterTrayMode().
     ...(settings?.trayMode ? { maximizable: false } : {}),
@@ -7392,7 +7543,7 @@ function createWindow(boundsOverride, options = {}) {
     // Seed the legacy fallback's construction-only active state. The material
     // manager immediately replaces HUD with Liquid Glass when supported.
     ...(process.platform === 'darwin' ? { vibrancy: 'hud', visualEffectState: 'active' } : {}),
-    ...(process.platform === 'win32' && glass && !windowsAccent ? { backgroundMaterial: 'acrylic' } : {}),
+    ...(process.platform === 'win32' && glass && !windowsAccent && !topDockEnabled ? { backgroundMaterial: 'acrylic' } : {}),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -7402,7 +7553,7 @@ function createWindow(boundsOverride, options = {}) {
   mainWindow = win;
   mainWindowChrome = { collapsedFloatingBubble };
   applyMacSpaceBehavior();
-  applyWindowsChrome(win, { round: true });
+  applyWindowsChrome(win, { round: !topDockEnabled });
   let windowsAccentFallback = false;
   if (windowsAccent && !applyWindowsAccentBlur(win)) {
     // The Accent API is undocumented and can disappear or reject a window on
@@ -7695,6 +7846,7 @@ function rebuildWindow() {
 app.whenReady().then(() => {
   if (process.platform === 'darwin' && app.dock) app.dock.setIcon(APP_ICON_PATH);
   ensureSettingsLoaded();
+  importCcSwitchCredentialsOnce();
   powerMonitor.on('lock-screen', () => notchController?.setLocked(true));
   powerMonitor.on('unlock-screen', () => notchController?.setLocked(false));
   // Switching the OS between light and dark repaints the taskbar underneath an
@@ -7762,6 +7914,15 @@ app.whenReady().then(() => {
   rateRefreshTimer = setInterval(() => { refreshExchangeRates(); }, 6 * 60 * 60 * 1000);
   syncDockSurfaces();
   ipcMain.handle('settings:get', () => settingsForRenderer());
+  ipcMain.handle('topDock:setExpanded', (_event, expanded) => setTopDockExpanded(expanded));
+  ipcMain.handle('topDock:setPinned', (_event, pinned) => {
+    settings.topDockPinned = pinned === true;
+    saveSettings();
+    return settings.topDockPinned;
+  });
+  ipcMain.on('topDock:close', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.hide();
+  });
   ipcMain.handle('appearance:getBackgroundImage', () => getBackgroundImage(app.getPath('userData')));
   ipcMain.handle('appearance:chooseBackgroundImage', async () => {
     const result = await dialog.showOpenDialog(mainWindow, {
@@ -7861,6 +8022,16 @@ app.whenReady().then(() => {
     if (sharedEdit && settingsIdentity !== contentRuntime.status().identity) throw new Error('hub_changed');
     let dotsVisibilityApplied = Promise.resolve();
     applySettingsPatch(patch, (refresh) => { dotsVisibilityApplied = refresh; });
+    if (patch.topDockEnabled !== undefined || patch.topDockCompact !== undefined || patch.topDockWidth !== undefined
+      || patch.topDockCollapsedHeight !== undefined || patch.topDockExpandedHeight !== undefined) {
+      if (settings.topDockEnabled === true) {
+        applyTopDockSizing();
+      } else {
+        const bounds = restoredBounds() || DEFAULT_WINDOW;
+        mainWindow.setBounds(bounds);
+      }
+      applyWindowSettings();
+    }
     await latestUsageHost?.transformSettingsApplied?.();
     await dotsVisibilityApplied;
     // Other settings writes may finish while this visibility projection waits.
@@ -7932,6 +8103,10 @@ app.whenReady().then(() => {
     if (patch.heatmapMetric !== undefined) normalizedPatch.heatmapMetric = normalizeHeatmapMetric(patch.heatmapMetric, settings.heatmapMetric);
     if (patch.homeActiveDaysWindow !== undefined) normalizedPatch.homeActiveDaysWindow = normalizeHomeActiveDaysWindow(patch.homeActiveDaysWindow, settings.homeActiveDaysWindow);
     if (patch.sessionContextMetric !== undefined) normalizedPatch.sessionContextMetric = normalizeSessionContextMetric(patch.sessionContextMetric, settings.sessionContextMetric);
+    const normalizedTopDock = topDockModel.normalizeTopDockSettings({
+      ...settings,
+      ...normalizedPatch
+    });
     settings = normalizeWindowBehaviorSettings({
       ...settings,
       ...normalizedPatch,
@@ -8010,6 +8185,18 @@ app.whenReady().then(() => {
       // `null` is a real value here (back to the automatic default), so the
       // patch is checked for presence rather than coalesced.
       edgeDockItems: normalizeEdgeDockItems('edgeDockItems' in (patch || {}) ? patch.edgeDockItems : settings.edgeDockItems),
+      topDockEnabled: normalizedTopDock.topDockEnabled,
+      topDockCompact: normalizedTopDock.topDockCompact,
+      topDockRelayAccounts: normalizedTopDock.topDockRelayAccounts,
+      topDockPinned: normalizedTopDock.topDockPinned,
+      topDockAutoHideMs: normalizedTopDock.topDockAutoHideMs,
+      topDockWidth: normalizedTopDock.topDockWidth,
+      topDockCollapsedHeight: normalizedTopDock.topDockCollapsedHeight,
+      topDockExpandedHeight: normalizedTopDock.topDockExpandedHeight,
+      ccSwitchImportVersion: Math.max(
+        0,
+        Math.trunc(Number(patch.ccSwitchImportVersion ?? settings.ccSwitchImportVersion) || 0)
+      ),
       discordRpcEnabled: patch.discordRpcEnabled ?? settings.discordRpcEnabled ?? false,
       limitsEnabled: parseBoolean(patch.limitsEnabled ?? settings.limitsEnabled, true),
       // Sourced from settings only, never from the patch: subscriptions:save is
@@ -8252,7 +8439,8 @@ app.whenReady().then(() => {
     syncNativeMaterialVisibility(win, nativeMaterialOptions({ ...settings, ...patch }, win === dashboardWindow));
     if (win === mainWindow || win === dashboardWindow) previewDockAppearance(patch);
     if (patch && patch.zoomFactor !== undefined && mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.setZoomFactor(clampZoom(patch.zoomFactor));
+      if (settings?.topDockEnabled === true) applyZoomFactor();
+      else mainWindow.webContents.setZoomFactor(clampZoom(patch.zoomFactor));
     }
     if (patch && patch.edgeDockCustomScale !== undefined && edgeDockController?.isRunning()) {
       edgeDockController.previewScale(patch.edgeDockCustomScale);

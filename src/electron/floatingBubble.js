@@ -14,6 +14,7 @@ function clamp(value, min, max) {
 
 function canUseFloatingBubble(settings = {}) {
   return settings.floatingBubbleEnabled === true &&
+    settings.topDockEnabled !== true &&
     settings.trayMode !== true &&
     settings.windowBehavior !== 'desktop';
 }

@@ -286,8 +286,8 @@ test('the setting only takes a literal true, never a truthy leftover', () => {
 
 test('main.js runs the keeper through the opt-in gate, never around it', () => {
   const main = readSource('src/electron/main.js');
-  assert.match(main, /function syncTaskbarZOrder\(\) \{\n {2}if \(!taskbarZOrderEnabled\(settings\)\)/);
-  assert.match(main, /function nudgeTaskbarZOrder\(\) \{\n {2}if \(!taskbarZOrderEnabled\(settings\)/);
+  assert.match(main, /function syncTaskbarZOrder\(\) \{\n {2}if \(settings\?\.topDockEnabled === true \|\| !taskbarZOrderEnabled\(settings\)\)/);
+  assert.match(main, /function nudgeTaskbarZOrder\(\) \{\n {2}if \(settings\?\.topDockEnabled === true \|\| !taskbarZOrderEnabled\(settings\)/);
   assert.match(main, /keepAboveTaskbar: parseBoolean\(patch\.keepAboveTaskbar \?\? settings\.keepAboveTaskbar, false\)/);
   assert.match(main, /keepAboveTaskbar: false/);
 });

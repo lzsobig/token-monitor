@@ -12,11 +12,13 @@ const THIRD_PARTY_ENV_ACCOUNT_NAME = 'environment';
 const NEWAPI_ACCOUNT_ADAPTER = 'newapi-account';
 const NEWAPI_TOKEN_ADAPTER = 'newapi-token';
 const SUB2API_ADAPTER = 'sub2api';
+const WORKBUDDY2API_ADAPTER = 'workbuddy2api';
 const CUSTOM_BALANCE_ADAPTER = 'custom';
 const THIRD_PARTY_ADAPTER_IDS = Object.freeze([
   NEWAPI_ACCOUNT_ADAPTER,
   NEWAPI_TOKEN_ADAPTER,
   SUB2API_ADAPTER,
+  WORKBUDDY2API_ADAPTER,
   CUSTOM_BALANCE_ADAPTER
 ]);
 const NEWAPI_STATUS_PATH = '/api/status';
@@ -29,7 +31,8 @@ const SUB2API_DASHBOARD_STATS_PATH = '/api/v1/usage/dashboard/stats';
 const DEFAULT_CUSTOM_ENDPOINT_PATH = '/user/balance';
 const DEFAULT_CUSTOM_CURRENCY = 'USD';
 const DEFAULT_CUSTOM_DIVISOR = 1;
-const CUSTOM_AUTH_MODES = Object.freeze(['bearer', 'x-api-key']);
+const WORKBUDDY2API_TIME_ZONE = 'Asia/Shanghai';
+const CUSTOM_AUTH_MODES = Object.freeze(['bearer', 'x-api-key', 'cookie']);
 
 function cleanValue(value) {
   let raw = typeof value === 'string' ? value.trim() : '';
@@ -331,6 +334,60 @@ function sub2apiUsageSummary(stats) {
   };
 }
 
+function workbuddy2ApiDateParts(now) {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: WORKBUDDY2API_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+  const parts = Object.fromEntries(formatter.formatToParts(new Date(now))
+    .filter((part) => part.type !== 'literal')
+    .map((part) => [part.type, part.value]));
+  return {
+    date: `${parts.year}-${parts.month}-${parts.day}`,
+    year: Number(parts.year),
+    month: Number(parts.month),
+    day: Number(parts.day)
+  };
+}
+
+function workbuddy2ApiResetAt(now) {
+  const parts = workbuddy2ApiDateParts(now);
+  return new Date(Date.UTC(parts.year, parts.month - 1, parts.day + 1) - 8 * 60 * 60 * 1000).toISOString();
+}
+
+function workbuddy2ApiQuota(payload, options = {}) {
+  const accounts = Array.isArray(payload?.accounts)
+    ? payload.accounts.filter((account) => account && typeof account === 'object')
+    : [];
+  if (accounts.length === 0) return null;
+  const now = Number.isFinite(Number(options.now)) ? Number(options.now) : Date.now();
+  const today = workbuddy2ApiDateParts(now).date;
+  let used = 0;
+  for (const account of accounts) {
+    const usage = account.token_usage && typeof account.token_usage === 'object'
+      ? account.token_usage
+      : {};
+    if (usage.daily_date && usage.daily_date !== today) continue;
+    used += Math.max(0, finiteNumber(usage.daily_tokens) || 0);
+  }
+  return {
+    window: {
+      kind: 'daily',
+      label: 'Today used',
+      detail: `${accounts.length} accounts`,
+      used,
+      resetsAt: workbuddy2ApiResetAt(now),
+      showMeter: false
+    },
+    balance: {
+      accounts: accounts.length,
+      healthy: Math.max(0, Math.trunc(finiteNumber(payload.healthy) || 0))
+    }
+  };
+}
+
 function customBalanceQuota(payload, account) {
   if (payload?.success === false || payload?.code === false) return null;
   const divisor = account.divisor;
@@ -526,6 +583,34 @@ const THIRD_PARTY_ADAPTERS = Object.freeze({
       return 'Account';
     }
   }),
+  [WORKBUDDY2API_ADAPTER]: Object.freeze({
+    platform: 'workbuddy2api',
+    mode: 'account',
+    normalizeCredentials(profile) {
+      const apiKey = cleanValue(profile.apiKey);
+      return apiKey ? { apiKey } : null;
+    },
+    identity(account) {
+      return [account.baseUrl, account.apiKey];
+    },
+    request(account) {
+      return {
+        path: '/panel/api/overview',
+        headers: {
+          Authorization: `Bearer ${account.apiKey}`
+        }
+      };
+    },
+    unit() {
+      return 1;
+    },
+    quota(payload) {
+      return workbuddy2ApiQuota(payload);
+    },
+    planLabel() {
+      return 'WorkBuddy2API';
+    }
+  }),
   [CUSTOM_BALANCE_ADAPTER]: Object.freeze({
     platform: 'custom',
     mode: 'custom',
@@ -541,7 +626,7 @@ const THIRD_PARTY_ADAPTERS = Object.freeze({
       const currency = normalizeCustomCurrency(profile.currency);
       const divisor = normalizeCustomDivisor(profile.divisor);
       return (
-        apiKey
+        apiKey && !/[\r\n]/u.test(apiKey)
         && endpointPath
         && authMode
         && remainingPath
@@ -571,7 +656,9 @@ const THIRD_PARTY_ADAPTERS = Object.freeze({
       ];
     },
     request(account) {
-      const headers = account.authMode === 'x-api-key'
+      const headers = account.authMode === 'cookie'
+        ? { Cookie: account.apiKey }
+        : account.authMode === 'x-api-key'
         ? { 'x-api-key': account.apiKey }
         : { Authorization: `Bearer ${account.apiKey}` };
       return {
@@ -584,7 +671,10 @@ const THIRD_PARTY_ADAPTERS = Object.freeze({
     },
     quota(payload, _unit, account) {
       const quota = customBalanceQuota(payload, account);
-      if (quota) quota.balance.currency = account.currency;
+      if (quota) {
+        quota.balance.currency = account.currency;
+        quota.window.currency = account.currency;
+      }
       return quota;
     },
     planLabel() {
@@ -918,6 +1008,7 @@ module.exports = {
   SUB2API_ME_PATH,
   SUB2API_REFRESH_PATH,
   SUB2API_USAGE_STATS_PATH,
+  WORKBUDDY2API_ADAPTER,
   THIRD_PARTY_ADAPTER_IDS,
   THIRD_PARTY_ADAPTERS,
   THIRD_PARTY_ENV_ACCOUNT_NAME,
@@ -943,5 +1034,6 @@ module.exports = {
   normalizeThirdPartyProfile,
   quotaPerUnit,
   readCustomJsonPath,
-  thirdPartyProfileName
+  thirdPartyProfileName,
+  workbuddy2ApiQuota
 };

@@ -18,6 +18,7 @@ const {
   SUB2API_ME_PATH,
   SUB2API_REFRESH_PATH,
   SUB2API_USAGE_STATS_PATH,
+  WORKBUDDY2API_ADAPTER,
   THIRD_PARTY_ADAPTER_IDS,
   THIRD_PARTY_ADAPTERS,
   THIRD_PARTY_ENV_ACCOUNT_NAME,
@@ -110,7 +111,13 @@ test('third-party adapters are registered explicitly behind the stable provider 
   assert.deepEqual(Object.keys(THIRD_PARTY_ADAPTERS), THIRD_PARTY_ADAPTER_IDS);
   assert.deepEqual(
     THIRD_PARTY_ADAPTER_IDS,
-    [NEWAPI_ACCOUNT_ADAPTER, NEWAPI_TOKEN_ADAPTER, SUB2API_ADAPTER, CUSTOM_BALANCE_ADAPTER]
+    [
+      NEWAPI_ACCOUNT_ADAPTER,
+      NEWAPI_TOKEN_ADAPTER,
+      SUB2API_ADAPTER,
+      WORKBUDDY2API_ADAPTER,
+      CUSTOM_BALANCE_ADAPTER
+    ]
   );
   for (const adapter of Object.values(THIRD_PARTY_ADAPTERS)) {
     assert.equal(typeof adapter.normalizeCredentials, 'function');
@@ -119,6 +126,21 @@ test('third-party adapters are registered explicitly behind the stable provider 
     assert.equal(typeof adapter.quota, 'function');
     assert.equal(typeof adapter.planLabel, 'function');
   }
+});
+
+test('custom balance can use a website session cookie while keeping CNY units', () => {
+  const adapter = THIRD_PARTY_ADAPTERS[CUSTOM_BALANCE_ADAPTER];
+  const credentials = adapter.normalizeCredentials({
+    apiKey: 'tr_session=test-session', endpointPath: '/api/usage-summary',
+    authMode: 'cookie', remainingPath: 'data.balanceCny', currency: 'CNY', divisor: 1
+  });
+  assert.ok(credentials);
+  assert.deepEqual(adapter.request(credentials).headers, { Cookie: 'tr_session=test-session' });
+  const quota = adapter.quota({ data: { balanceCny: 12.5 } }, 1, credentials);
+  assert.equal(quota.balance.amount, 12.5);
+  assert.equal(quota.balance.currency, 'CNY');
+  assert.equal(quota.window.currency, 'CNY');
+  assert.equal(adapter.normalizeCredentials({ ...credentials, apiKey: 'a\r\nInjected: b' }), null);
 });
 
 test('third-party Base URLs preserve subpaths and strip only a terminal v1', () => {

@@ -4,6 +4,11 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('tokenMonitor', {
   getSettings: () => ipcRenderer.invoke('settings:get'),
+  topDock: {
+    setExpanded: (expanded) => ipcRenderer.invoke('topDock:setExpanded', expanded),
+    setPinned: (pinned) => ipcRenderer.invoke('topDock:setPinned', pinned),
+    close: () => ipcRenderer.send('topDock:close')
+  },
   updateSettings: (patch) => {
     // Membership is owned by the dedicated account commands, never generic settings.
     const { workbuddyManagedAccounts: _managedAccounts, ...safePatch } = patch || {};

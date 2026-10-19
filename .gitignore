@@ -23,3 +23,13 @@ worker/.wrangler/
 worker/node_modules/
 worker/.dev.vars
 devlog/
+
+# Local TopDock QA artifacts and Electron test profiles
+._cache_*
+/console-final-test/
+/dev-console-test/
+/dev-data*/
+/final-test-data/
+/zip-test/
+portable-*.png
+topdock-*.png

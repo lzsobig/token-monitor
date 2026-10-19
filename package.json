@@ -1,6 +1,6 @@
 {
   "name": "token-monitor",
-  "productName": "Token Monitor",
+  "productName": "Token Monitor TopDock",
   "version": "0.75.0",
   "description": "Live token & cost widget for Claude Code, Codex & Hermes — local-first, optional multi-device sync.",
   "main": "src/electron/main.js",
@@ -35,8 +35,8 @@
     "verify": "npm run lint && npm test"
   },
   "build": {
-    "appId": "com.javis.tokenmonitor",
-    "productName": "Token Monitor",
+    "appId": "com.javis.tokenmonitor.topdock",
+    "productName": "Token Monitor TopDock",
     "directories": {
       "output": "dist"
     },

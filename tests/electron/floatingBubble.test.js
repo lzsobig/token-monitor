@@ -43,6 +43,7 @@ test('floating bubble is available only for enabled movable window modes', () =>
   assert.equal(canUseFloatingBubble({ floatingBubbleEnabled: false, windowBehavior: 'floating', trayMode: false }), false);
   assert.equal(canUseFloatingBubble({ floatingBubbleEnabled: true, windowBehavior: 'desktop', trayMode: false }), false);
   assert.equal(canUseFloatingBubble({ floatingBubbleEnabled: true, windowBehavior: 'floating', trayMode: true }), false);
+  assert.equal(canUseFloatingBubble({ floatingBubbleEnabled: true, topDockEnabled: true, windowBehavior: 'floating' }), false);
 });
 
 test('floating bubble native glass follows the system glass setting', () => {

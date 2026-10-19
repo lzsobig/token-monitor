@@ -120,6 +120,24 @@ Attached Liquid Glass updates the native camera scrim and outline together; a fa
 
 The seven-day chart takes its newest bar from live Today accounting and past days from History (`notch/history.js`). A missing day stays unknown, and reads as zero only when the transport is available and every joined device answered for its History. The answer is dropped when the backend generation, local date or History enablement changes; a new revision keeps the previous answer until the reload lands, and remote reloads are throttled to one a minute.
 
+## TopDock hover surface
+
+TopDock uses the ordinary window layer and never runs the taskbar z-order keeper, so active application windows may cover it. The size button toggles the persisted `topDockCompact` preference between normal size and 80 percent. Native bounds and the renderer zoom change together, including transparent gutters, and fixed size constraints are released before resizing. Main-window appearance previews must preserve this TopDock zoom; other windows retain their ordinary zoom settings.
+
+TopDock excludes legacy floating-bubble activation and clears its pending collapse timer/state when settings reconcile. Its normal layer takes precedence even if a stale bubble state was already collapsed.
+
+TopDock expands on surface entry and collapses immediately on surface leave or window blur. Legacy `topDockPinned` and `topDockAutoHideMs` settings remain readable for compatibility but do not override hover behavior. The renderer no longer offers a pin action. `renderer/topDock/topDockModel.js` reserves an 8-pixel transparent gutter on each side of the native window; the configured width and heights describe the visible surface. Keep this gutter aligned with the padding in `renderer/topDock/topDock.css`. The inset CSS surface owns rounding and its shadow, so TopDock disables native window rounding and shadows.
+
+The Codex card presents canonical `session` (five-hour) and `weekly` windows separately, each with its own remaining percentage and reset clock. Additional feature pools are excluded from these lanes. Missing quota or reset information stays unknown; local token counts are never converted into subscription percentages.
+
+`topDockRelayAccounts` selects named relay accounts for the balance-only view. Selected accounts remain visible when disconnected or when their service has no monetary balance; no balance is inferred from token counts. Additional cards scroll inside the expanded surface. Custom balance profiles support explicit `cookie` authentication in the existing local credential store; only the selected site's cookie is supplied, never the browser's entire cookie jar. Currency applies to both the balance and credits window.
+
+Header chips have fixed, non-shrinking widths. Balance chips show the account name and amount without redundant balance labels; overflow scrolls horizontally, including with a vertical mouse wheel. Never compress the name column to fit every account in the header.
+
+Each expanded card exposes a bottom-right console link. Codex and DeepSeek open their official usage pages, WorkBuddy2API opens its account panel, and other selected relays open the origin of their configured Base URL. The link stays out of the compact header so it cannot crowd quota chips.
+
+WorkBuddy2API is the exception to relay balance-only display: its `workbuddy2api` adapter reports today's used tokens, including zero, with the daily reset clock. Both its header chip and expanded card retain that usage; other relays keep showing money balances.
+
 ## Widget mode switching
 
 `settings.hubMode` selects the source: `local` uses the local IPC collector; `client` uses Hub SSE plus this device's sync collector; `host` adds an embedded Hub; `icloud` uses local collection and iCloud file reconciliation instead of SSE. A live agent PID suppresses widget Hub uploads and owns the local daily-history archive. The agent has no iCloud sink, so the widget must still publish its iCloud record while yielding archive writes.
